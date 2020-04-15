@@ -1,12 +1,22 @@
 <head>
     <script src="https://cdn.jsdelivr.net/npm/vega@5"></script>
+    <script src="https://d3js.org/d3.v5.min.js"></script>
 </head>
 
 <body>
+    <div id="global"></div>
     <div id="view"></div>
     <script type="text/javascript">
-        var view;
+        function render(spec) {
+            view = new vega.View(vega.parse(spec), {
+                renderer: 'svg', // renderer (canvas or svg)
+                container: '#view', // parent DOM container
+                hover: true // enable hover processing
+            });
+            return view.runAsync();
+        }
 
+        var view;
         var spec = {
             "$schema": "https://vega.github.io/schema/vega/v5.json",
             "width": 900,
@@ -17,28 +27,15 @@
                 "right": 0,
                 "bottom": 0
             },
-            "data": [{
-                    "name": "world",
-                    "url": "./countries-110m.json",
-                    "format": {
-                        "type": "topojson",
-                        "feature": "countries"
-                    },
-                    "transform": [{
-                        "type": "geopath",
-                        "projection": "projection"
-                    }]
-                },
-                {
-                    "name": "covid",
-                    "url": "https://api.covid19api.com/summary",
-                    "format": {
-                        "type": "json",
-                        "parse": "auto"
-                    }
+            "data": [],
+            "scales": [{
+                "name": "bluescolorscale",
+                "type": "linear",
+                "domain": [0, 1000],
+                "range": {
+                    "scheme": "blues"
                 }
-            ],
-            "scales": [],
+            }],
             "projections": [{
                 "name": "projection",
                 "type": "mercator",
@@ -60,12 +57,12 @@
             "marks": [{
                 "type": "path",
                 "from": {
-                    "data": "world"
+                    "data": "map"
                 },
                 "encode": {
                     "enter": {
                         "fill": {
-                            "value": "#dedede"
+                            "value": "silver"
                         },
                         "stroke": {
                             "value": "white"
@@ -74,8 +71,20 @@
                     "update": {
                         "path": {
                             "field": "path"
+                        },
+                        "fill": {
+                            "scale": "bluescolorscale",
+                            "field": "TotalDeaths"
                         }
-                    }
+                    },
+                    "hover": {
+                        "fill": {
+                            "value": "red"
+                        },
+                        "stroke": {
+                            "value": "white"
+                        }
+                    },
                 }
             }],
             "autosize": "none",
@@ -163,14 +172,53 @@
             ]
         };
 
-        function render(spec) {
-            view = new vega.View(vega.parse(spec), {
-                renderer: 'canvas', // renderer (canvas or svg)
-                container: '#view', // parent DOM container
-                hover: true // enable hover processing
+        Promise.all([d3.json("https://api.covid19api.com/summary"),
+                // add promises to load additional data sources here
+            ])
+            .then((data) => {
+                // extract country data to render world map
+                // we can do this directly in vega but since we also want the global data it saves an API call
+                var apidata = data[0];
+                var globaldata = apidata.Global;
+                var countriesdata = apidata.Countries;
+                spec.data.push({
+                    "name": "covid-country",
+                    "values": countriesdata
+                });
+                // extract 2-digit code and use as id, use id to extract relevant fields from country covid data
+                spec.data.push({
+                    "name": "map",
+                    "url": "./world-countries.json",
+                    "format": {
+                        "type": "topojson",
+                        "feature": "countries1"
+                    },
+                    "transform": [{
+                            "type": "geopath",
+                            "projection": "projection"
+                        },
+                        {
+                            "type": "formula",
+                            "as": "id",
+                            "expr": "datum.properties['Alpha-2']"
+                        },
+                        {
+                            "type": "lookup",
+                            "from": "covid-country",
+                            "key": "CountryCode",
+                            "fields": ["id"],
+                            "values": ["TotalConfirmed", "TotalDeaths", "TotalRecovered"]
+                        }
+                    ]
+                });
+                render(spec);
+
+                //global data
+                var global = d3.select("#global");
+                global.append("h3").html("GLOBAL DATA");
+                global.append("div").html(`Confirmed Cases: ${globaldata.TotalConfirmed}`);
+                global.append("div").html(`Deaths: ${globaldata.TotalDeaths}`);
+                global.append("div").html(`Recovered: ${globaldata.TotalRecovered}`);
             });
-            return view.runAsync();
-        }
-        render(spec);
     </script>
 </body>
