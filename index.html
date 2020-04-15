@@ -30,10 +30,12 @@
             "data": [],
             "scales": [{
                 "name": "bluescolorscale",
-                "type": "linear",
-                "domain": [0, 1000],
+                "type": "quantize",
+                // TODO make max dynamic
+                "domain": [0, 30000],
                 "range": {
-                    "scheme": "blues"
+                    "scheme": "blues",
+                    "count": 6
                 }
             }],
             "projections": [{
