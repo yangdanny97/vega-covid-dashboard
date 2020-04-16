@@ -2,9 +2,17 @@
     <script src="https://cdn.jsdelivr.net/npm/vega@5"></script>
     <script src="https://d3js.org/d3.v5.min.js"></script>
 </head>
+<style>
+    body {
+        background-color: black;
+        color: silver;
+        font-family: Arial, Helvetica, sans-serif
+    }
+</style>
 
 <body>
     <div id="global"></div>
+    <br>
     <div id="view"></div>
     <script type="text/javascript">
         function render(spec) {
@@ -29,15 +37,24 @@
             },
             "data": [],
             "scales": [{
-                "name": "bluescolorscale",
-                "type": "quantize",
-                // TODO make max dynamic
-                "domain": [0, 30000],
-                "range": {
-                    "scheme": "blues",
-                    "count": 6
+                    "name": "DeathScale",
+                    "type": "sqrt",
+                    "domain": {
+                        "data": "covid-country",
+                        "field": "TotalDeaths"
+                    },
+                    "range": [0, 225]
+                },
+                {
+                    "name": "ConfirmedScale",
+                    "type": "sqrt",
+                    "domain": {
+                        "data": "covid-country",
+                        "field": "TotalConfirmed"
+                    },
+                    "range": [0, 225]
                 }
-            }],
+            ],
             "projections": [{
                 "name": "projection",
                 "type": "mercator",
@@ -56,46 +73,81 @@
                     "signal": "ty"
                 }]
             }],
-            "legends": [
+            "legends": [],
+            "marks": [{
+                    "type": "rect",
+                    "encode": {
+                        "enter": {
+                            "width": {
+                                "signal": "width"
+                            },
+                            "height": {
+                                "signal": "height"
+                            },
+                            "fill": {
+                                "value": "black"
+                            }
+                        }
+                    }
+                },
                 {
-                "fill": "bluescolorscale",
-                "orient": "bottom-right",
-                "title": "Total Deaths",
+                    "type": "path",
+                    "from": {
+                        "data": "map"
+                    },
+                    "encode": {
+                        "enter": {
+                            "fill": {
+                                "value": "dimgray"
+                            },
+                            "stroke": {
+                                "value": "lavender"
+                            }
+                        },
+                        "update": {
+                            "path": {
+                                "field": "path"
+                            },
+                            "fill": {
+                                "value": "dimgray"
+                            }
+                        },
+                        "hover": {
+                            "fill": {
+                                "value": "silver"
+                            }
+                        },
+                    },
+                }, {
+                    "type": "symbol",
+                    "from": {
+                        "data": "map"
+                    },
+                    "encode": {
+                        "update": {
+                            "fill": {
+                                "value": "red"
+                            },
+                            "x": {
+                                "field": "centroid[0]"
+                            },
+                            "y": {
+                                "field": "centroid[1]"
+                            },
+                            "size": {
+                                "field": "TotalDeaths",
+                                "scale": "DeathScale"
+                            },
+                            "stroke-width": {
+                                "value": 0
+                            },
+                            "opacity": {
+                                "value": 0.7
+                            }
+                        }
+                    }
                 }
             ],
-            "marks": [{
-                "type": "path",
-                "from": {
-                    "data": "map"
-                },
-                "encode": {
-                    "enter": {
-                        "fill": {
-                            "value": "silver"
-                        },
-                        "stroke": {
-                            "value": "white"
-                        }
-                    },
-                    "update": {
-                        "path": {
-                            "field": "path"
-                        },
-                        "fill": {
-                            "scale": "bluescolorscale",
-                            "field": "TotalDeaths"
-                        }
-                    },
-                    "hover": {
-                        "fill": {
-                            "value": "red"
-                        },
-                        "stroke": {
-                            "value": "white"
-                        }
-                    },
-                }
-            }],
             "autosize": "none",
             "signals": [{
                     "name": "tx",
@@ -212,6 +264,11 @@
                             "expr": "datum.properties['Alpha-2']"
                         },
                         {
+                            "type": "formula",
+                            "as": "centroid",
+                            "expr": "geoCentroid('projection', datum.geometry)"
+                        },
+                        {
                             "type": "lookup",
                             "from": "covid-country",
                             "key": "CountryCode",
@@ -224,10 +281,11 @@
 
                 //global data
                 var global = d3.select("#global");
+                var fmt = d3.format(",d");
                 global.append("h3").html("GLOBAL DATA");
-                global.append("div").html(`Confirmed Cases: ${globaldata.TotalConfirmed}`);
-                global.append("div").html(`Deaths: ${globaldata.TotalDeaths}`);
-                global.append("div").html(`Recovered: ${globaldata.TotalRecovered}`);
+                global.append("div").html(`Confirmed Cases: ${fmt(globaldata.TotalConfirmed)}`);
+                global.append("div").html(`Deaths: ${fmt(globaldata.TotalDeaths)}`);
+                global.append("div").html(`Recovered: ${fmt(globaldata.TotalRecovered)}`);
             });
     </script>
 </body>
