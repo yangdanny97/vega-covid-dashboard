@@ -9,4 +9,4 @@ TODO:
 - add buttons to switch between variables
 - add tooltips
 - add USA map & data
-- styling/additional tables
+- time series data (try covidapi.com) - how to filter by country?

@@ -15,7 +15,7 @@
         width: 200px;
     }
 
-    table {
+    .table {
         text-align: left;
         border-top: solid silver 1px;
         border-left: solid silver 1px;
@@ -27,9 +27,13 @@
         padding: 3px;
     }
 
+    .th-noborder {
+        border: none;
+    }
+
     .bigtable {
         overflow: scroll;
-        height: 400px;
+        height: 500px;
         float: left;
         margin: 20px;
         border: solid silver 1px;
@@ -46,18 +50,29 @@
 
 <body>
     <div>
-        <table id="global"></table>
+        <table id="global" class="table"></table>
+        <table>
+            <tr>
+                <th class="th-noborder">
+                    <h3 id="viewUS">USA Map</h3>
+                </th>
+                <th class="th-noborder">
+                    <h3 id="viewWorld">World Map</h3>
+                </th>
+            </tr>
+        </table>
     </div>
     <div id="view"></div>
+    <div id="view2"></div>
     <div>
         <div class="bigtable">
-            <table id="recovered"></table>
+            <table id="recovered" class="table"></table>
         </div>
         <div class="bigtable">
-            <table id="deaths"></table>
+            <table id="deaths" class="table"></table>
         </div>
         <div class="bigtable">
-            <table id="cases"></table>
+            <table id="cases" class="table"></table>
         </div>
     </div>
     <script src="./vis.js"></script>

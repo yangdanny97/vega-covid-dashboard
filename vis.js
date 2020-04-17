@@ -1,103 +1,38 @@
-function render(spec) {
+var view;
+var view2;
+
+function renderWorld(spec) {
     view = new vega.View(vega.parse(spec), {
-        renderer: 'svg', // renderer (canvas or svg)
-        container: '#view', // parent DOM container
-        hover: true // enable hover processing
+        renderer: 'svg',
+        container: '#view',
+        hover: true
     });
     return view.runAsync();
 }
 
-var view;
+function renderUSA(spec) {
+    view2 = new vega.View(vega.parse(spec), {
+        renderer: 'svg',
+        container: '#view2',
+        hover: true
+    });
+    return view2.runAsync();
+}
+
+var worldspec;
+var usaspec;
 var spec = {
     "$schema": "https://vega.github.io/schema/vega/v5.json",
-    "width": 900,
-    "height": 560,
+    "width": 975,
+    "height": 610,
     "padding": {
         "top": 0,
         "left": 0,
         "right": 0,
         "bottom": 0
     },
-    "data": [],
-    "scales": [{
-        "name": "deathscale",
-        "type": "quantize",
-        "domain": {
-            "data": "covid-country",
-            "field": "TotalDeaths"
-        },
-        "range": {
-            "scheme": "blues",
-            "count": 6
-        }
-    }],
-    "projections": [{
-        "name": "projection",
-        "type": "mercator",
-        "scale": {
-            "signal": "scale"
-        },
-        "rotate": [{
-            "signal": "rotateX"
-        }, 0, 0],
-        "center": [0, {
-            "signal": "centerY"
-        }],
-        "translate": [{
-            "signal": "tx"
-        }, {
-            "signal": "ty"
-        }]
-    }],
-    "legends": [{
-        "fill": "deathscale",
-        "orient": "bottom-right",
-        "title": "Total Deaths",
-        "fillColor": "white",
-        "direction": "horizontal",
-        "padding": 10,
-        "titleFontSize": 15
-    }],
-    "marks": [{
-        "type": "path",
-        "from": {
-            "data": "map"
-        },
-        "encode": {
-            "enter": {
-                "fill": {
-                    "value": "dimgray"
-                },
-                "stroke": {
-                    "value": "lavender"
-                }
-            },
-            "update": {
-                "path": {
-                    "field": "path"
-                },
-                "fill": {
-                    "scale": "deathscale",
-                    "field": "TotalDeaths"
-                }
-            },
-            "hover": {
-                "fill": {
-                    "value": "red"
-                },
-            },
-        }
-    }],
     "autosize": "none",
     "signals": [{
-            "name": "tx",
-            "update": "width / 2"
-        },
-        {
-            "name": "ty",
-            "update": "height / 2"
-        },
-        {
             "name": "scale",
             "value": 150,
             "on": [{
@@ -173,45 +108,245 @@ var spec = {
     ]
 };
 
+function setupWorldMap(countriesdata) {
+    worldspec = JSON.parse(JSON.stringify(spec));
+    // extract 2-digit code and use as id, use id to extract relevant fields from country covid data
+    worldspec.data = [{
+        "name": "covid-country",
+        "values": countriesdata
+    }, {
+        "name": "map",
+        "url": "./world-countries.json",
+        "format": {
+            "type": "topojson",
+            "feature": "countries"
+        },
+        "transform": [{
+                "type": "geopath",
+                "projection": "projection"
+            },
+            {
+                "type": "formula",
+                "as": "id",
+                "expr": "datum.properties['Alpha-2']"
+            },
+            {
+                "type": "lookup",
+                "from": "covid-country",
+                "key": "CountryCode",
+                "fields": ["id"],
+                "values": ["TotalConfirmed", "TotalDeaths", "TotalRecovered"]
+            }
+        ]
+    }];
+    worldspec.scales = [{
+        "name": "deathscale",
+        "type": "quantize",
+        "domain": {
+            "data": "covid-country",
+            "field": "TotalDeaths"
+        },
+        "range": {
+            "scheme": "blues",
+            "count": 6
+        }
+    }]
+    worldspec.projections = [{
+        "name": "projection",
+        "type": "mercator",
+        "scale": {
+            "signal": "scale"
+        },
+        "rotate": [{
+            "signal": "rotateX"
+        }, 0, 0],
+        "center": [0, {
+            "signal": "centerY"
+        }],
+        "translate": [{
+            "signal": "tx"
+        }, {
+            "signal": "ty"
+        }]
+    }];
+    worldspec.legends = [{
+        "fill": "deathscale",
+        "orient": "bottom-right",
+        "title": "Total Deaths",
+        "fillColor": "white",
+        "direction": "horizontal",
+        "padding": 10,
+        "titleFontSize": 15
+    }];
+    worldspec.marks = [{
+        "type": "path",
+        "from": {
+            "data": "map"
+        },
+        "encode": {
+            "enter": {
+                "fill": {
+                    "value": "dimgray"
+                },
+                "stroke": {
+                    "value": "lavender"
+                }
+            },
+            "update": {
+                "path": {
+                    "field": "path"
+                },
+                "fill": {
+                    "scale": "deathscale",
+                    "field": "TotalDeaths"
+                }
+            },
+            "hover": {
+                "fill": {
+                    "value": "red"
+                },
+            },
+        }
+    }];
+    worldspec.signals.unshift({
+        "name": "tx",
+        "update": "width / 2"
+    });
+    worldspec.signals.unshift({
+        "name": "ty",
+        "update": "height / 2"
+    });
+    renderWorld(worldspec);
+}
+
+function setupUSMap(statesdata) {
+    usaspec = JSON.parse(JSON.stringify(spec));
+    // extract 2-digit code and use as id, use id to extract relevant fields from country covid data
+    usaspec.data = [{
+        "name": "covid-states",
+        "values": statesdata
+    }, {
+        "name": "map",
+        "url": "./states-albers-10m.json",
+        "format": {
+            "type": "topojson",
+            "feature": "states"
+        },
+        "transform": [{
+                "type": "geopath",
+                "projection": "projection"
+            },
+            {
+                "type": "formula",
+                "as": "id",
+                "expr": "datum.properties.name"
+            },
+            {
+                "type": "lookup",
+                "from": "covid-states",
+                "key": "state_name",
+                "fields": ["id"],
+                "as": ["TotalConfirmed", "TotalDeaths", "TotalRecovered"],
+                "values": ["total_cases", "total_deaths", "total_recovered"]
+            }
+        ]
+    }];
+    usaspec.scales = [{
+        "name": "deathscale",
+        "type": "quantize",
+        "domain": {
+            "data": "covid-states",
+            "field": "total_deaths"
+        },
+        "range": {
+            "scheme": "blues",
+            "count": 6
+        }
+    }]
+    usaspec.projections = [{
+        "name": "projection",
+        "type": "identity",
+        "rotate": [{
+            "signal": "rotateX"
+        }, 0, 0],
+        "center": [0, {
+            "signal": "centerY"
+        }],
+        "translate": [{
+            "signal": "tx"
+        }, {
+            "signal": "ty"
+        }]
+    }];
+    usaspec.legends = [{
+        "fill": "deathscale",
+        "orient": "bottom-right",
+        "title": "Total Deaths",
+        "fillColor": "white",
+        "direction": "horizontal",
+        "padding": 10,
+        "titleFontSize": 15
+    }];
+    usaspec.marks = [{
+        "type": "path",
+        "from": {
+            "data": "map"
+        },
+        "encode": {
+            "enter": {
+                "fill": {
+                    "value": "dimgray"
+                },
+                "stroke": {
+                    "value": "lavender"
+                }
+            },
+            "update": {
+                "path": {
+                    "field": "path"
+                },
+                "fill": {
+                    "scale": "deathscale",
+                    "field": "TotalDeaths"
+                }
+            },
+            "hover": {
+                "fill": {
+                    "value": "red"
+                },
+            },
+        }
+    }];
+    usaspec.signals.unshift({
+        "name": "tx",
+        "update": "0"
+    });
+    usaspec.signals.unshift({
+        "name": "ty",
+        "update": "0"
+    });
+    renderUSA(usaspec);
+}
+
 Promise.all([d3.json("https://api.covid19api.com/summary"),
+        d3.json("https://data.covidapi.com/timeseries/countries"),
+        d3.json("https://data.covidapi.com/states")
         // add promises to load additional data sources here
     ])
     .then((data) => {
         // extract country data to render world map
         // we can do this directly in vega but since we also want the global data it saves an API call
-        var apidata = data[0];
-        var globaldata = apidata.Global;
-        var countriesdata = apidata.Countries;
-        spec.data.push({
-            "name": "covid-country",
-            "values": countriesdata
-        });
-        // extract 2-digit code and use as id, use id to extract relevant fields from country covid data
-        spec.data.push({
-            "name": "map",
-            "url": "./world-countries.json",
-            "format": {
-                "type": "topojson",
-                "feature": "countries1"
-            },
-            "transform": [{
-                    "type": "geopath",
-                    "projection": "projection"
-                },
-                {
-                    "type": "formula",
-                    "as": "id",
-                    "expr": "datum.properties['Alpha-2']"
-                },
-                {
-                    "type": "lookup",
-                    "from": "covid-country",
-                    "key": "CountryCode",
-                    "fields": ["id"],
-                    "values": ["TotalConfirmed", "TotalDeaths", "TotalRecovered"]
-                }
-            ]
-        });
+        var worlddata = data[0];
+        var globaldata = worlddata.Global;
+        var countriesdata = worlddata.Countries;
+        setupWorldMap(countriesdata);
+
+        var timeseries = data[1].body;
+        //TODO
+
+        var statesdata = data[2].body;
+        var usdata = statesdata.filter(s => s.country_name === "US");
+        setupUSMap(usdata);
 
         //global data
         var global = d3.select("#global");
@@ -254,5 +389,19 @@ Promise.all([d3.json("https://api.covid19api.com/summary"),
             row.append("th").append("div").html(`${fmt(d.TotalDeaths)}`);
         });
 
-        render(spec);
+        // listeners to show/hide charts
+        var view1 = d3.select("#view");
+        var view2 = d3.select("#view2");
+        // USA map is initially hidden
+        view2.attr("hidden", true);
+        var viewUS = d3.select("#viewUS");
+        viewUS.on("click", () => {
+            view1.attr("hidden", true);
+            view2.attr("hidden", null);
+        });
+        var viewWorld = d3.select("#viewWorld");
+        viewWorld.on("click", () => {
+            view2.attr("hidden", true);
+            view1.attr("hidden", null);
+        });
     });
