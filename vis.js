@@ -132,16 +132,16 @@ function setupWorldMap(countriesdata) {
                 "expr": "datum.properties['Alpha-2']"
             },
             {
+                "type": "formula",
+                "as": "centroid",
+                "expr": "geoCentroid('projection', datum.geo)"
+            },
+            {
                 "type": "lookup",
                 "from": "covid-country",
                 "key": "CountryCode",
                 "fields": ["id"],
                 "values": ["TotalConfirmed", "TotalDeaths", "TotalRecovered"]
-            },
-            {
-                "type": "formula",
-                "as": "centroid",
-                "expr": "geoCentroid('projection', datum.geo)"
             }
         ]
     }];
@@ -182,15 +182,6 @@ function setupWorldMap(countriesdata) {
             "signal": "ty"
         }]
     }];
-    worldspec.legends = [{
-        "fill": "deathscale",
-        "orient": "bottom-right",
-        "title": "Total Deaths",
-        "fillColor": "white",
-        "direction": "horizontal",
-        "padding": 10,
-        "titleFontSize": 15
-    }];
     worldspec.marks = [{
             "type": "path",
             "from": {
@@ -211,8 +202,6 @@ function setupWorldMap(countriesdata) {
                     },
                     "fill": {
                         "value": "dimgray"
-                        // "scale": "deathscale",
-                        // "field": "TotalDeaths"
                     }
                 },
                 "hover": {
@@ -228,7 +217,7 @@ function setupWorldMap(countriesdata) {
                 "data": "map"
             },
             "encode": {
-                "enter": {
+                "update": {
                     "size": {
                         "scale": "TotalDeaths",
                         "field": "TotalDeaths"
@@ -244,9 +233,7 @@ function setupWorldMap(countriesdata) {
                     },
                     "strokeWidth": {
                         "value": 1
-                    }
-                },
-                "update": {
+                    },
                     "x": {
                         "field": "centroid[0]"
                     },
@@ -291,33 +278,21 @@ function setupUSMap(statesdata) {
                 "expr": "datum.properties.name"
             },
             {
+                "type": "formula",
+                "as": "centroid",
+                "expr": "geoCentroid('projection', datum.geo)"
+            },
+            {
                 "type": "lookup",
                 "from": "covid-states",
                 "key": "state_name",
                 "fields": ["id"],
                 "as": ["TotalConfirmed", "TotalDeaths", "TotalRecovered"],
                 "values": ["total_cases", "total_deaths", "total_recovered"]
-            },
-            {
-                "type": "formula",
-                "as": "centroid",
-                "expr": "geoCentroid('projection', datum.geo)"
             }
         ]
     }];
     usaspec.scales = [{
-            "name": "deathscale",
-            "type": "quantize",
-            "domain": {
-                "data": "covid-states",
-                "field": "total_deaths"
-            },
-            "range": {
-                "scheme": "blues",
-                "count": 6
-            }
-        },
-        {
             "name": "TotalDeaths",
             "type": "linear",
             "domain": {
@@ -351,15 +326,6 @@ function setupUSMap(statesdata) {
             "signal": "ty"
         }]
     }];
-    usaspec.legends = [{
-        "fill": "deathscale",
-        "orient": "bottom-right",
-        "title": "Total Deaths",
-        "fillColor": "white",
-        "direction": "horizontal",
-        "padding": 10,
-        "titleFontSize": 15
-    }];
     usaspec.marks = [{
             "type": "path",
             "from": {
@@ -380,8 +346,6 @@ function setupUSMap(statesdata) {
                     },
                     "fill": {
                         "value": "dimgray"
-                        // "scale": "deathscale",
-                        // "field": "TotalDeaths"
                     }
                 },
                 "hover": {
@@ -397,7 +361,7 @@ function setupUSMap(statesdata) {
                 "data": "map"
             },
             "encode": {
-                "enter": {
+                "update": {
                     "size": {
                         "scale": "TotalDeaths",
                         "field": "TotalDeaths"
@@ -413,9 +377,7 @@ function setupUSMap(statesdata) {
                     },
                     "strokeWidth": {
                         "value": 1
-                    }
-                },
-                "update": {
+                    },
                     "x": {
                         "field": "centroid[0]"
                     },
@@ -424,7 +386,6 @@ function setupUSMap(statesdata) {
                     }
                 }
             }
-
         }
     ];
     usaspec.signals.unshift({
@@ -438,10 +399,10 @@ function setupUSMap(statesdata) {
     renderUSA(usaspec);
 }
 
-Promise.all([d3.json("https://api.covid19api.com/summary"),
+Promise.all([
+        d3.json("https://api.covid19api.com/summary"),
         d3.json("https://data.covidapi.com/timeseries/countries"),
         d3.json("https://data.covidapi.com/states")
-        // add promises to load additional data sources here
     ])
     .then((data) => {
         // extract country data to render world map
@@ -463,15 +424,17 @@ Promise.all([d3.json("https://api.covid19api.com/summary"),
         var fmt = d3.format(",d");
         global.append("tr").append("th").attr("colspan", 2).append("h3").html("GLOBAL DATA");
         var fields = ["Total Confirmed", "Total Deaths", "Total Recovered"];
-        fields.forEach(d => {
+        var colors = ["yellow", "red", "green"];
+        fields.forEach((d, i) => {
             var row = global.append("tr");
-            row.append("th").append("div").html(d);
+            row.append("th").append("div").attr("class", colors[i]).html(d);
             row.append("th").append("div").html(`${fmt(globaldata[d.replace(' ', '')])}`);
         })
 
         //recovered data
         var recovered = d3.select("#recovered");
-        recovered.append("tr").append("th").attr("colspan", 2).append("h3").html("RECOVERED");
+        recovered.append("tr").append("th").attr("colspan", 2).append("h3")
+            .attr("class", "green").html("RECOVERED");
         countriesdata.sort((a, b) => b.TotalRecovered - a.TotalRecovered);
         countriesdata.forEach(d => {
             var row = recovered.append("tr");
@@ -481,7 +444,8 @@ Promise.all([d3.json("https://api.covid19api.com/summary"),
 
         //cases data
         var cases = d3.select("#cases");
-        cases.append("tr").append("th").attr("colspan", 2).append("h3").html("CONFIRMED CASES");
+        cases.append("tr").append("th").attr("colspan", 2).append("h3")
+            .attr("class", "yellow").html("CONFIRMED CASES");
         countriesdata.sort((a, b) => b.TotalConfirmed - a.TotalConfirmed);
         countriesdata.forEach(d => {
             var row = cases.append("tr");
@@ -491,7 +455,8 @@ Promise.all([d3.json("https://api.covid19api.com/summary"),
 
         //deaths data
         var deaths = d3.select("#deaths");
-        deaths.append("tr").append("th").attr("colspan", 2).append("h3").html("DEATHS");
+        deaths.append("tr").append("th").attr("colspan", 2).append("h3")
+            .attr("class", "red").html("DEATHS");
         countriesdata.sort((a, b) => b.TotalDeaths - a.TotalDeaths);
         countriesdata.forEach(d => {
             var row = deaths.append("tr");

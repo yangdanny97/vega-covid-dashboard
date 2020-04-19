@@ -41,16 +41,29 @@
 
     #global {
         margin: 20px;
+        float: left;
     }
 
-    #view, #view2 {
+    #view,
+    #view2 {
         margin: 20px;
+    }
+
+    .red {
+        color: lightcoral;
+    }
+
+    .green {
+        color: greenyellow;
+    }
+
+    .yellow {
+        color: gold;
     }
 </style>
 
 <body>
     <div>
-        <table id="global" class="table"></table>
         <table>
             <tr>
                 <th class="th-noborder">
@@ -73,6 +86,9 @@
         </div>
         <div class="bigtable">
             <table id="cases" class="table"></table>
+        </div>
+        <div>
+            <table id="global" class="table"></table>
         </div>
     </div>
     <script src="./vis.js"></script>
