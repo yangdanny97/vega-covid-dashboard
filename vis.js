@@ -1,27 +1,42 @@
 var view;
 var view2;
+var fmt = d3.format(",d");
 
 function renderWorld(spec) {
-    view = new vega.View(vega.parse(spec), {
-        renderer: 'svg',
-        container: '#view',
-        hover: true
+    var runtime = vega.parse(spec);
+    var handler = new vegaTooltip.Handler({
+        'theme': 'dark'
     });
+    view = new vega.View(runtime, {
+            renderer: 'svg',
+            container: '#view',
+            hover: true
+        })
+        .tooltip(handler.call)
+        .initialize(document.getElementById("view"))
+        .run();
     return view.runAsync();
 }
 
 function renderUSA(spec) {
-    view2 = new vega.View(vega.parse(spec), {
-        renderer: 'svg',
-        container: '#view2',
-        hover: true
+    var runtime = vega.parse(spec);
+    var handler = new vegaTooltip.Handler({
+        'theme': 'dark'
     });
+    view2 = new vega.View(runtime, {
+            renderer: 'svg',
+            container: '#view2',
+            hover: true
+        })
+        .tooltip(handler.call)
+        .initialize(document.getElementById("view2"))
+        .run();
     return view2.runAsync();
 }
 
 var worldspec;
 var usaspec;
-var circleRange = [9, 2000];
+var circleRange = [4, 1600];
 var size = [975, 610];
 var spec = {
     "$schema": "https://vega.github.io/schema/vega/v5.json",
@@ -43,6 +58,16 @@ var spec = {
                     "consume": true
                 },
                 "update": "clamp(scale * pow(1.0005, -event.deltaY * pow(16, event.deltaMode)), 150, 3000)"
+            }]
+        },
+        {
+            "name": "scaleFactor",
+            "value": 1,
+            "on": [{
+                "events": {
+                    "signal": "scale"
+                },
+                "update": "scale/150"
             }]
         },
         {
@@ -120,6 +145,9 @@ var spec = {
                     },
                     "stroke": {
                         "value": "lavender"
+                    },
+                    "tooltip": {
+                        "signal": "{ 'Country': datum.properties.name, 'Deaths': format(datum.TotalDeaths, ',d'), 'Cases': format(datum.TotalConfirmed, ',d'), 'Recovered': format(datum.TotalRecovered, ',d') }"
                     }
                 },
                 "update": {
@@ -143,6 +171,11 @@ var spec = {
                 "data": "map"
             },
             "encode": {
+                "enter": {
+                    "tooltip": {
+                        "signal": "{ 'Country': datum.properties.name, 'Deaths': format(datum.TotalDeaths, ',d'), 'Cases': format(datum.TotalConfirmed, ',d'), 'Recovered': format(datum.TotalRecovered, ',d') }"
+                    }
+                },
                 "update": {
                     "size": {
                         "scale": {
@@ -151,6 +184,9 @@ var spec = {
                         "field": {
                             "signal": "Variable"
                         },
+                        "mult": {
+                            "signal": "scaleFactor"
+                        }
                     },
                     "fill": {
                         "value": "red"
@@ -158,11 +194,8 @@ var spec = {
                     "fillOpacity": {
                         "value": 0.8
                     },
-                    "stroke": {
-                        "value": "red"
-                    },
                     "strokeWidth": {
-                        "value": 1
+                        "value": 0
                     },
                     "x": {
                         "field": "centroid[0]"
@@ -388,7 +421,6 @@ Promise.all([
 
         //global data
         var global = d3.select("#global");
-        var fmt = d3.format(",d");
         global.append("tr").append("th").attr("colspan", 2).append("h3").html("GLOBAL DATA");
         var fields = ["Total Confirmed", "Total Deaths", "Total Recovered"];
         var colors = ["yellow", "red", "green"];
