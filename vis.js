@@ -21,11 +21,12 @@ function renderUSA(spec) {
 
 var worldspec;
 var usaspec;
-var circleRange = [16, 1000];
+var circleRange = [9, 2000];
+var size = [975, 610];
 var spec = {
     "$schema": "https://vega.github.io/schema/vega/v5.json",
-    "width": 975,
-    "height": 610,
+    "width": size[0],
+    "height": size[1],
     "padding": {
         "top": 0,
         "left": 0,
@@ -106,83 +107,8 @@ var spec = {
                 "update": "clamp(angles[1] + delta[1], -60, 60)"
             }]
         }
-    ]
-};
-
-function setupWorldMap(countriesdata) {
-    worldspec = JSON.parse(JSON.stringify(spec));
-    // extract 2-digit code and use as id, use id to extract relevant fields from country covid data
-    worldspec.data = [{
-        "name": "covid-country",
-        "values": countriesdata
-    }, {
-        "name": "map",
-        "url": "./world-countries.json",
-        "format": {
-            "type": "topojson",
-            "feature": "countries"
-        },
-        "transform": [{
-                "type": "geopath",
-                "projection": "projection"
-            },
-            {
-                "type": "formula",
-                "as": "id",
-                "expr": "datum.properties['Alpha-2']"
-            },
-            {
-                "type": "formula",
-                "as": "centroid",
-                "expr": "geoCentroid('projection', datum.geo)"
-            },
-            {
-                "type": "lookup",
-                "from": "covid-country",
-                "key": "CountryCode",
-                "fields": ["id"],
-                "values": ["TotalConfirmed", "TotalDeaths", "TotalRecovered"]
-            }
-        ]
-    }];
-    worldspec.scales = [{
-            "name": "TotalDeaths",
-            "type": "linear",
-            "domain": {
-                "data": "covid-country",
-                "field": "TotalDeaths"
-            },
-            "range": circleRange
-        },
-        {
-            "name": "TotalConfirmed",
-            "type": "linear",
-            "domain": {
-                "data": "covid-country",
-                "field": "TotalConfirmed"
-            },
-            "range": circleRange
-        }
-    ]
-    worldspec.projections = [{
-        "name": "projection",
-        "type": "mercator",
-        "scale": {
-            "signal": "scale"
-        },
-        "rotate": [{
-            "signal": "rotateX"
-        }, 0, 0],
-        "center": [0, {
-            "signal": "centerY"
-        }],
-        "translate": [{
-            "signal": "tx"
-        }, {
-            "signal": "ty"
-        }]
-    }];
-    worldspec.marks = [{
+    ],
+    "marks": [{
             "type": "path",
             "from": {
                 "data": "map"
@@ -219,8 +145,12 @@ function setupWorldMap(countriesdata) {
             "encode": {
                 "update": {
                     "size": {
-                        "scale": "TotalDeaths",
-                        "field": "TotalDeaths"
+                        "scale": {
+                            "signal": "Variable"
+                        },
+                        "field": {
+                            "signal": "Variable"
+                        },
                     },
                     "fill": {
                         "value": "red"
@@ -243,7 +173,82 @@ function setupWorldMap(countriesdata) {
                 }
             }
         }
-    ];
+    ]
+};
+
+function setupWorldMap(countriesdata) {
+    worldspec = JSON.parse(JSON.stringify(spec));
+    // extract 2-digit code and use as id, use id to extract relevant fields from country covid data
+    worldspec.data = [{
+        "name": "covid-country",
+        "values": countriesdata
+    }, {
+        "name": "map",
+        "url": "./world-countries.json",
+        "format": {
+            "type": "topojson",
+            "feature": "countries"
+        },
+        "transform": [{
+                "type": "geopath",
+                "projection": "projection"
+            },
+            {
+                "type": "formula",
+                "as": "id",
+                "expr": "datum.properties['Alpha-2']"
+            },
+            {
+                "type": "formula",
+                "as": "centroid",
+                "expr": "geoCentroid('projection', datum.geometry)"
+            },
+            {
+                "type": "lookup",
+                "from": "covid-country",
+                "key": "CountryCode",
+                "fields": ["id"],
+                "values": ["TotalConfirmed", "TotalDeaths", "TotalRecovered"]
+            }
+        ]
+    }];
+    worldspec.scales = [{
+            "name": "TotalDeaths",
+            "type": "linear",
+            "domain": {
+                "data": "covid-country",
+                "field": "TotalDeaths"
+            },
+            "range": circleRange
+        },
+        {
+            "name": "TotalConfirmed",
+            "type": "linear",
+            "domain": {
+                "data": "covid-country",
+                "field": "TotalConfirmed"
+            },
+            "range": circleRange
+        }
+    ]
+    worldspec.projections = [{
+        "name": "projection",
+        "type": "equirectangular",
+        "scale": {
+            "signal": "scale"
+        },
+        "rotate": [{
+            "signal": "rotateX"
+        }, 0, 0],
+        "center": [0, {
+            "signal": "centerY"
+        }],
+        "translate": [{
+            "signal": "tx"
+        }, {
+            "signal": "ty"
+        }]
+    }];
     worldspec.signals.unshift({
         "name": "tx",
         "update": "width / 2"
@@ -252,6 +257,18 @@ function setupWorldMap(countriesdata) {
         "name": "ty",
         "update": "height / 2"
     });
+    worldspec.signals.push({
+        "name": "Variable",
+        "value": "TotalDeaths",
+        "bind": {
+            "input": "select",
+            "options": [
+                "TotalDeaths",
+                "TotalConfirmed"
+            ],
+            "element": "#viewControl"
+        },
+    })
     renderWorld(worldspec);
 }
 
@@ -280,7 +297,7 @@ function setupUSMap(statesdata) {
             {
                 "type": "formula",
                 "as": "centroid",
-                "expr": "geoCentroid('projection', datum.geo)"
+                "expr": "geoCentroid('projection', datum.geometry)"
             },
             {
                 "type": "lookup",
@@ -326,68 +343,6 @@ function setupUSMap(statesdata) {
             "signal": "ty"
         }]
     }];
-    usaspec.marks = [{
-            "type": "path",
-            "from": {
-                "data": "map"
-            },
-            "encode": {
-                "enter": {
-                    "fill": {
-                        "value": "dimgray"
-                    },
-                    "stroke": {
-                        "value": "lavender"
-                    }
-                },
-                "update": {
-                    "path": {
-                        "field": "path"
-                    },
-                    "fill": {
-                        "value": "dimgray"
-                    }
-                },
-                "hover": {
-                    "fill": {
-                        "value": "silver"
-                    },
-                },
-            }
-        },
-        {
-            "type": "symbol",
-            "from": {
-                "data": "map"
-            },
-            "encode": {
-                "update": {
-                    "size": {
-                        "scale": "TotalDeaths",
-                        "field": "TotalDeaths"
-                    },
-                    "fill": {
-                        "value": "red"
-                    },
-                    "fillOpacity": {
-                        "value": 0.8
-                    },
-                    "stroke": {
-                        "value": "red"
-                    },
-                    "strokeWidth": {
-                        "value": 1
-                    },
-                    "x": {
-                        "field": "centroid[0]"
-                    },
-                    "y": {
-                        "field": "centroid[1]"
-                    }
-                }
-            }
-        }
-    ];
     usaspec.signals.unshift({
         "name": "tx",
         "update": "0"
@@ -396,6 +351,18 @@ function setupUSMap(statesdata) {
         "name": "ty",
         "update": "0"
     });
+    usaspec.signals.push({
+        "name": "Variable",
+        "value": "TotalDeaths",
+        "bind": {
+            "input": "select",
+            "options": [
+                "TotalDeaths",
+                "TotalConfirmed"
+            ],
+            "element": "#view2Control"
+        },
+    })
     renderUSA(usaspec);
 }
 
@@ -467,16 +434,25 @@ Promise.all([
         // listeners to show/hide charts
         var view1 = d3.select("#view");
         var view2 = d3.select("#view2");
+        var view1Control = d3.select("#viewControl");
+        var view2Control = d3.select("#view2Control");
         // USA map is initially hidden
-        view2.attr("hidden", true);
+        view1.style("width", `${size[0]}px`);
+        view2.attr("hidden", true).style("width", `${size[0]}px`);
+        view2Control.attr("hidden", true);
+
         var viewUS = d3.select("#viewUS");
         viewUS.on("click", () => {
             view1.attr("hidden", true);
             view2.attr("hidden", null);
+            view1Control.attr("hidden", true);
+            view2Control.attr("hidden", null);
         });
         var viewWorld = d3.select("#viewWorld");
         viewWorld.on("click", () => {
             view2.attr("hidden", true);
             view1.attr("hidden", null);
+            view2Control.attr("hidden", true);
+            view1Control.attr("hidden", null);
         });
     });

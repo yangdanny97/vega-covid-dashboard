@@ -47,6 +47,7 @@
     #view,
     #view2 {
         margin: 20px;
+        border: 1px solid silver;
     }
 
     .red {
@@ -60,19 +61,49 @@
     .yellow {
         color: gold;
     }
+
+    #controls {
+        margin: 20px;
+    }
+
+    button {
+        padding: 5px;
+        color:silver;
+        background-color: dimgray;
+    }
+
+    button:hover {
+        color: dimgray;
+        background-color:silver;
+    }
+    h1 {
+        margin: 20px;
+    }
+
+    .vega-bind-name {
+        margin-left: 10px;
+    }
+
+    select {
+        margin: 10px;
+    }
 </style>
 
 <body>
-    <div>
+    <h1>COVID-19 Dashboard</h1>
+    <div id="controls">
         <table>
+            <p>Pan and zoom by dragging and scrolling.</p>
             <tr>
                 <th class="th-noborder">
-                    <button id="viewUS">USA Map</h3>
+                    <button id="viewUS">View USA Map</h3>
                 </th>
                 <th class="th-noborder">
-                    <button id="viewWorld">World Map</h3>
+                    <button id="viewWorld">View World Map</h3>
                 </th>
             </tr>
+            <div id="viewControl"></div>
+            <div id="view2Control"></div>
         </table>
     </div>
     <div id="view"></div>
