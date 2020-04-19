@@ -21,6 +21,7 @@ function renderUSA(spec) {
 
 var worldspec;
 var usaspec;
+var circleRange = [16, 1000];
 var spec = {
     "$schema": "https://vega.github.io/schema/vega/v5.json",
     "width": 975,
@@ -136,21 +137,33 @@ function setupWorldMap(countriesdata) {
                 "key": "CountryCode",
                 "fields": ["id"],
                 "values": ["TotalConfirmed", "TotalDeaths", "TotalRecovered"]
+            },
+            {
+                "type": "formula",
+                "as": "centroid",
+                "expr": "geoCentroid('projection', datum.geo)"
             }
         ]
     }];
     worldspec.scales = [{
-        "name": "deathscale",
-        "type": "quantize",
-        "domain": {
-            "data": "covid-country",
-            "field": "TotalDeaths"
+            "name": "TotalDeaths",
+            "type": "linear",
+            "domain": {
+                "data": "covid-country",
+                "field": "TotalDeaths"
+            },
+            "range": circleRange
         },
-        "range": {
-            "scheme": "blues",
-            "count": 6
+        {
+            "name": "TotalConfirmed",
+            "type": "linear",
+            "domain": {
+                "data": "covid-country",
+                "field": "TotalConfirmed"
+            },
+            "range": circleRange
         }
-    }]
+    ]
     worldspec.projections = [{
         "name": "projection",
         "type": "mercator",
@@ -179,35 +192,71 @@ function setupWorldMap(countriesdata) {
         "titleFontSize": 15
     }];
     worldspec.marks = [{
-        "type": "path",
-        "from": {
-            "data": "map"
+            "type": "path",
+            "from": {
+                "data": "map"
+            },
+            "encode": {
+                "enter": {
+                    "fill": {
+                        "value": "dimgray"
+                    },
+                    "stroke": {
+                        "value": "lavender"
+                    }
+                },
+                "update": {
+                    "path": {
+                        "field": "path"
+                    },
+                    "fill": {
+                        "value": "dimgray"
+                        // "scale": "deathscale",
+                        // "field": "TotalDeaths"
+                    }
+                },
+                "hover": {
+                    "fill": {
+                        "value": "silver"
+                    },
+                },
+            }
         },
-        "encode": {
-            "enter": {
-                "fill": {
-                    "value": "dimgray"
+        {
+            "type": "symbol",
+            "from": {
+                "data": "map"
+            },
+            "encode": {
+                "enter": {
+                    "size": {
+                        "scale": "TotalDeaths",
+                        "field": "TotalDeaths"
+                    },
+                    "fill": {
+                        "value": "red"
+                    },
+                    "fillOpacity": {
+                        "value": 0.8
+                    },
+                    "stroke": {
+                        "value": "red"
+                    },
+                    "strokeWidth": {
+                        "value": 1
+                    }
                 },
-                "stroke": {
-                    "value": "lavender"
+                "update": {
+                    "x": {
+                        "field": "centroid[0]"
+                    },
+                    "y": {
+                        "field": "centroid[1]"
+                    }
                 }
-            },
-            "update": {
-                "path": {
-                    "field": "path"
-                },
-                "fill": {
-                    "scale": "deathscale",
-                    "field": "TotalDeaths"
-                }
-            },
-            "hover": {
-                "fill": {
-                    "value": "red"
-                },
-            },
+            }
         }
-    }];
+    ];
     worldspec.signals.unshift({
         "name": "tx",
         "update": "width / 2"
@@ -248,21 +297,45 @@ function setupUSMap(statesdata) {
                 "fields": ["id"],
                 "as": ["TotalConfirmed", "TotalDeaths", "TotalRecovered"],
                 "values": ["total_cases", "total_deaths", "total_recovered"]
+            },
+            {
+                "type": "formula",
+                "as": "centroid",
+                "expr": "geoCentroid('projection', datum.geo)"
             }
         ]
     }];
     usaspec.scales = [{
-        "name": "deathscale",
-        "type": "quantize",
-        "domain": {
-            "data": "covid-states",
-            "field": "total_deaths"
+            "name": "deathscale",
+            "type": "quantize",
+            "domain": {
+                "data": "covid-states",
+                "field": "total_deaths"
+            },
+            "range": {
+                "scheme": "blues",
+                "count": 6
+            }
         },
-        "range": {
-            "scheme": "blues",
-            "count": 6
+        {
+            "name": "TotalDeaths",
+            "type": "linear",
+            "domain": {
+                "data": "covid-states",
+                "field": "total_deaths"
+            },
+            "range": circleRange
+        },
+        {
+            "name": "TotalConfirmed",
+            "type": "linear",
+            "domain": {
+                "data": "covid-states",
+                "field": "total_cases"
+            },
+            "range": circleRange
         }
-    }]
+    ]
     usaspec.projections = [{
         "name": "projection",
         "type": "identity",
@@ -288,35 +361,72 @@ function setupUSMap(statesdata) {
         "titleFontSize": 15
     }];
     usaspec.marks = [{
-        "type": "path",
-        "from": {
-            "data": "map"
+            "type": "path",
+            "from": {
+                "data": "map"
+            },
+            "encode": {
+                "enter": {
+                    "fill": {
+                        "value": "dimgray"
+                    },
+                    "stroke": {
+                        "value": "lavender"
+                    }
+                },
+                "update": {
+                    "path": {
+                        "field": "path"
+                    },
+                    "fill": {
+                        "value": "dimgray"
+                        // "scale": "deathscale",
+                        // "field": "TotalDeaths"
+                    }
+                },
+                "hover": {
+                    "fill": {
+                        "value": "silver"
+                    },
+                },
+            }
         },
-        "encode": {
-            "enter": {
-                "fill": {
-                    "value": "dimgray"
+        {
+            "type": "symbol",
+            "from": {
+                "data": "map"
+            },
+            "encode": {
+                "enter": {
+                    "size": {
+                        "scale": "TotalDeaths",
+                        "field": "TotalDeaths"
+                    },
+                    "fill": {
+                        "value": "red"
+                    },
+                    "fillOpacity": {
+                        "value": 0.8
+                    },
+                    "stroke": {
+                        "value": "red"
+                    },
+                    "strokeWidth": {
+                        "value": 1
+                    }
                 },
-                "stroke": {
-                    "value": "lavender"
+                "update": {
+                    "x": {
+                        "field": "centroid[0]"
+                    },
+                    "y": {
+                        "field": "centroid[1]"
+                    }
                 }
-            },
-            "update": {
-                "path": {
-                    "field": "path"
-                },
-                "fill": {
-                    "scale": "deathscale",
-                    "field": "TotalDeaths"
-                }
-            },
-            "hover": {
-                "fill": {
-                    "value": "red"
-                },
-            },
+            }
+
         }
-    }];
+    ];
     usaspec.signals.unshift({
         "name": "tx",
         "update": "0"
