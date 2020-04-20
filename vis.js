@@ -198,10 +198,10 @@ var spec = {
                         "value": 0
                     },
                     "x": {
-                        "field": "centroid[0]"
+                        "field": "latitude"
                     },
                     "y": {
-                        "field": "centroid[1]"
+                        "field": "longitude"
                     }
                 }
             }
@@ -215,6 +215,10 @@ function setupWorldMap(countriesdata) {
     worldspec.data = [{
         "name": "covid-country",
         "values": countriesdata
+    }, {
+        "name": "centroids-country",
+        "url": "./centroids_country.csv",
+        "format": {"type": "csv", "parse": "auto"}
     }, {
         "name": "map",
         "url": "./world-countries.json",
@@ -242,6 +246,13 @@ function setupWorldMap(countriesdata) {
                 "key": "CountryCode",
                 "fields": ["id"],
                 "values": ["TotalConfirmed", "TotalDeaths", "TotalRecovered"]
+            },
+            {
+                "type": "lookup",
+                "from": "centroids-country",
+                "key": "country",
+                "fields": ["id"],
+                "values": ["latitude", "longitude"]
             }
         ]
     }];
