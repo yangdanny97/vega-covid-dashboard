@@ -69,18 +69,18 @@
 
     button {
         padding: 5px;
-        color:silver;
+        color: silver;
         background-color: dimgray;
     }
 
     button:hover {
-        color: dimgray;
-        background-color:silver;
+        color: black;
+        background-color: silver;
     }
 
     .active {
-        color: dimgray;
-        background-color:silver;
+        color: black;
+        background-color: silver;
     }
 
     h1 {
@@ -94,13 +94,23 @@
     select {
         margin: 10px;
     }
+
+    a {
+        color: silver;
+    }
+
+    #footer {
+        clear: both;
+        margin: 20px;
+    }
 </style>
 
 <body>
     <h1>COVID-19 Dashboard</h1>
+    <hr>
     <div id="controls">
         <table>
-            <p>Pan and zoom by dragging and scrolling.</p>
+            <p>Pan and zoom the world map by dragging and scrolling.</p>
             <tr>
                 <th class="th-noborder">
                     <button id="viewUS">View USA Map</h3>
@@ -128,6 +138,11 @@
         <div>
             <table id="global" class="table"></table>
         </div>
+    </div>
+    <div id="footer">
+        <hr>
+        <div>Built by <a href="https://github.com/yangdanny97">Danny Yang</a> and <a
+                href="https://github.com/milan-zhou">Milan Zhou</a> using D3 and Vega.</div>
     </div>
     <script src="./vis.js"></script>
 </body>
