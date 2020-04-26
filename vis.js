@@ -134,38 +134,37 @@ var spec = {
         }
     ],
     "marks": [{
-            "type": "path",
-            "from": {
-                "data": "map"
+        "type": "path",
+        "from": {
+            "data": "map"
+        },
+        "encode": {
+            "enter": {
+                "fill": {
+                    "value": "dimgray"
+                },
+                "stroke": {
+                    "value": "lavender"
+                },
+                "tooltip": {
+                    "signal": "{ 'Country': datum.properties.name, 'Deaths': format(datum.TotalDeaths, ',d'), 'Cases': format(datum.TotalConfirmed, ',d'), 'Recovered': format(datum.TotalRecovered, ',d') }"
+                }
             },
-            "encode": {
-                "enter": {
-                    "fill": {
-                        "value": "dimgray"
-                    },
-                    "stroke": {
-                        "value": "lavender"
-                    },
-                    "tooltip": {
-                        "signal": "{ 'Country': datum.properties.name, 'Deaths': format(datum.TotalDeaths, ',d'), 'Cases': format(datum.TotalConfirmed, ',d'), 'Recovered': format(datum.TotalRecovered, ',d') }"
-                    }
+            "update": {
+                "path": {
+                    "field": "path"
                 },
-                "update": {
-                    "path": {
-                        "field": "path"
-                    },
-                    "fill": {
-                        "value": "dimgray"
-                    }
+                "fill": {
+                    "value": "dimgray"
+                }
+            },
+            "hover": {
+                "fill": {
+                    "value": "silver"
                 },
-                "hover": {
-                    "fill": {
-                        "value": "silver"
-                    },
-                },
-            }
+            },
         }
-    ]
+    }]
 };
 
 function setupWorldMap(countriesdata) {
@@ -177,7 +176,10 @@ function setupWorldMap(countriesdata) {
     }, {
         "name": "centroids-country",
         "url": "./centroids_country.csv",
-        "format": {"type": "csv", "parse": "auto"}
+        "format": {
+            "type": "csv",
+            "parse": "auto"
+        }
     }, {
         "name": "map",
         "url": "./world-countries.json",
@@ -412,7 +414,7 @@ function setupUSMap(statesdata) {
             "element": "#view2Control"
         },
     });
-    usaspec.marks.push(        {
+    usaspec.marks.push({
         "type": "symbol",
         "from": {
             "data": "map"
