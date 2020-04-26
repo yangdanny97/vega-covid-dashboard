@@ -1,12 +1,10 @@
 # vega-covid-dashboard
-Interactive dashboard for COVID-19 data, built using Vega and D3. 
+Interactive dashboard for COVID-19 data, built using Vega and D3. View it live [HERE](https://yangdanny97.github.io/vega-covid-dashboard).
 
 Features:
 - interactive world map of cases/deaths/recoveries per country
 - interactive US map of cases/deaths per state
 - tables of cases/deaths/recoveries worldwide & for each country
-
-View live version [HERE](https://yangdanny97.github.io/vega-covid-dashboard).
 
 Note: this vis relies on several APIs for data, so it will break if those APIs stop working
 
