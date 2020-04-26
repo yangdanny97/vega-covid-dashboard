@@ -203,6 +203,7 @@ function setupWorldMap(countriesdata) {
                 "fields": ["id"],
                 "values": ["TotalConfirmed", "TotalDeaths", "TotalRecovered"]
             },
+            // use centers from separate file
             {
                 "type": "lookup",
                 "from": "centroids-country",
@@ -325,7 +326,6 @@ function setupWorldMap(countriesdata) {
 
 function setupUSMap(statesdata) {
     usaspec = JSON.parse(JSON.stringify(spec));
-    // extract 2-digit code and use as id, use id to extract relevant fields from country covid data
     usaspec.data = [{
         "name": "covid-states",
         "values": statesdata
@@ -345,6 +345,7 @@ function setupUSMap(statesdata) {
                 "as": "id",
                 "expr": "datum.properties.name"
             },
+            // use centroid as center
             {
                 "type": "formula",
                 "as": "center",
@@ -421,6 +422,7 @@ function setupUSMap(statesdata) {
         },
         "encode": {
             "enter": {
+                // don't display recovered data because it's bugged
                 "tooltip": {
                     "signal": "{ 'State': datum.properties.name, 'Deaths': format(datum.TotalDeaths, ',d'), 'Cases': format(datum.TotalConfirmed, ',d') }"
                 }
