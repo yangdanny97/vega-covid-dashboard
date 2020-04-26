@@ -36,7 +36,7 @@ function renderUSA(spec) {
 
 var worldspec;
 var usaspec;
-var circleRange = [4, 1600];
+var circleRange = [4, 2500];
 var size = [975, 610];
 var spec = {
     "$schema": "https://vega.github.io/schema/vega/v5.json",
@@ -164,47 +164,6 @@ var spec = {
                     },
                 },
             }
-        },
-        {
-            "type": "symbol",
-            "from": {
-                "data": "map"
-            },
-            "encode": {
-                "enter": {
-                    "tooltip": {
-                        "signal": "{ 'Country': datum.properties.name, 'Deaths': format(datum.TotalDeaths, ',d'), 'Cases': format(datum.TotalConfirmed, ',d'), 'Recovered': format(datum.TotalRecovered, ',d') }"
-                    }
-                },
-                "update": {
-                    "size": {
-                        "scale": {
-                            "signal": "Variable"
-                        },
-                        "field": {
-                            "signal": "Variable"
-                        },
-                        "mult": {
-                            "signal": "scaleFactor"
-                        }
-                    },
-                    "fill": {
-                        "value": "red"
-                    },
-                    "fillOpacity": {
-                        "value": 0.8
-                    },
-                    "strokeWidth": {
-                        "value": 0
-                    },
-                    "x": {
-                        "field": "latitude"
-                    },
-                    "y": {
-                        "field": "longitude"
-                    }
-                }
-            }
         }
     ]
 };
@@ -236,11 +195,6 @@ function setupWorldMap(countriesdata) {
                 "expr": "datum.properties['Alpha-2']"
             },
             {
-                "type": "formula",
-                "as": "centroid",
-                "expr": "geoCentroid('projection', datum.geometry)"
-            },
-            {
                 "type": "lookup",
                 "from": "covid-country",
                 "key": "CountryCode",
@@ -252,7 +206,17 @@ function setupWorldMap(countriesdata) {
                 "from": "centroids-country",
                 "key": "country",
                 "fields": ["id"],
-                "values": ["latitude", "longitude"]
+                "values": ["longitude", "latitude"]
+            },
+            {
+                "type": "geopoint",
+                "projection": "projection",
+                "fields": ["longitude", "latitude"]
+            },
+            {
+                "type": "formula",
+                "as": "center",
+                "expr": "[datum.x, datum.y]"
             }
         ]
     }];
@@ -312,7 +276,48 @@ function setupWorldMap(countriesdata) {
             ],
             "element": "#viewControl"
         },
-    })
+    });
+    worldspec.marks.push({
+        "type": "symbol",
+        "from": {
+            "data": "map"
+        },
+        "encode": {
+            "enter": {
+                "tooltip": {
+                    "signal": "{ 'Country': datum.properties.name, 'Deaths': format(datum.TotalDeaths, ',d'), 'Cases': format(datum.TotalConfirmed, ',d'), 'Recovered': format(datum.TotalRecovered, ',d') }"
+                }
+            },
+            "update": {
+                "size": {
+                    "scale": {
+                        "signal": "Variable"
+                    },
+                    "field": {
+                        "signal": "Variable"
+                    },
+                    "mult": {
+                        "signal": "scaleFactor"
+                    }
+                },
+                "fill": {
+                    "value": "red"
+                },
+                "fillOpacity": {
+                    "value": 0.8
+                },
+                "strokeWidth": {
+                    "value": 0
+                },
+                "x": {
+                    "field": "center[0]"
+                },
+                "y": {
+                    "field": "center[1]"
+                }
+            }
+        }
+    });
     renderWorld(worldspec);
 }
 
@@ -340,7 +345,7 @@ function setupUSMap(statesdata) {
             },
             {
                 "type": "formula",
-                "as": "centroid",
+                "as": "center",
                 "expr": "geoCentroid('projection', datum.geometry)"
             },
             {
@@ -348,8 +353,8 @@ function setupUSMap(statesdata) {
                 "from": "covid-states",
                 "key": "state_name",
                 "fields": ["id"],
-                "as": ["TotalConfirmed", "TotalDeaths", "TotalRecovered"],
-                "values": ["total_cases", "total_deaths", "total_recovered"]
+                "as": ["TotalConfirmed", "TotalDeaths"],
+                "values": ["total_cases", "total_deaths"]
             }
         ]
     }];
@@ -406,13 +411,91 @@ function setupUSMap(statesdata) {
             ],
             "element": "#view2Control"
         },
-    })
+    });
+    usaspec.marks.push(        {
+        "type": "symbol",
+        "from": {
+            "data": "map"
+        },
+        "encode": {
+            "enter": {
+                "tooltip": {
+                    "signal": "{ 'State': datum.properties.name, 'Deaths': format(datum.TotalDeaths, ',d'), 'Cases': format(datum.TotalConfirmed, ',d') }"
+                }
+            },
+            "update": {
+                "size": {
+                    "scale": {
+                        "signal": "Variable"
+                    },
+                    "field": {
+                        "signal": "Variable"
+                    },
+                    "mult": {
+                        "signal": "scaleFactor"
+                    }
+                },
+                "fill": {
+                    "value": "red"
+                },
+                "fillOpacity": {
+                    "value": 0.8
+                },
+                "strokeWidth": {
+                    "value": 0
+                },
+                "x": {
+                    "field": "center[0]"
+                },
+                "y": {
+                    "field": "center[1]"
+                }
+            }
+        }
+    });
     renderUSA(usaspec);
+}
+
+var view1Selector = d3.select("#view");
+var view2Selector = d3.select("#view2");
+
+var view1Control = d3.select("#viewControl");
+var view2Control = d3.select("#view2Control");
+
+var viewUSBtn = d3.select("#viewUS");
+var viewWorldBtn = d3.select("#viewWorld");
+
+view1Selector.style("width", `${size[0]}px`);
+view2Selector.style("width", `${size[0]}px`);
+
+var current = "";
+
+function viewUSA() {
+    if (current !== "USA") {
+        view1Selector.attr("hidden", true);
+        view2Selector.attr("hidden", null);
+        view1Control.attr("hidden", true);
+        view2Control.attr("hidden", null);
+        viewUSBtn.classed("active", true);
+        viewWorldBtn.classed("active", false);
+        current = "USA";
+    }
+}
+
+function viewWorld() {
+    if (current !== "World") {
+        view2Selector.attr("hidden", true);
+        view1Selector.attr("hidden", null);
+        view2Control.attr("hidden", true);
+        view1Control.attr("hidden", null);
+        viewUSBtn.classed("active", false);
+        viewWorldBtn.classed("active", true);
+        current = "World"
+    }
 }
 
 Promise.all([
         d3.json("https://api.covid19api.com/summary"),
-        d3.json("https://data.covidapi.com/timeseries/countries"),
         d3.json("https://data.covidapi.com/states")
     ])
     .then((data) => {
@@ -423,10 +506,7 @@ Promise.all([
         var countriesdata = worlddata.Countries;
         setupWorldMap(countriesdata);
 
-        var timeseries = data[1].body;
-        //TODO
-
-        var statesdata = data[2].body;
+        var statesdata = data[1].body;
         var usdata = statesdata.filter(s => s.country_name === "US");
         setupUSMap(usdata);
 
@@ -474,28 +554,8 @@ Promise.all([
             row.append("th").append("div").html(`${fmt(d.TotalDeaths)}`);
         });
 
-        // listeners to show/hide charts
-        var view1 = d3.select("#view");
-        var view2 = d3.select("#view2");
-        var view1Control = d3.select("#viewControl");
-        var view2Control = d3.select("#view2Control");
         // USA map is initially hidden
-        view1.style("width", `${size[0]}px`);
-        view2.attr("hidden", true).style("width", `${size[0]}px`);
-        view2Control.attr("hidden", true);
-
-        var viewUS = d3.select("#viewUS");
-        viewUS.on("click", () => {
-            view1.attr("hidden", true);
-            view2.attr("hidden", null);
-            view1Control.attr("hidden", true);
-            view2Control.attr("hidden", null);
-        });
-        var viewWorld = d3.select("#viewWorld");
-        viewWorld.on("click", () => {
-            view2.attr("hidden", true);
-            view1.attr("hidden", null);
-            view2Control.attr("hidden", true);
-            view1Control.attr("hidden", null);
-        });
+        viewWorld();
+        viewUSBtn.on("click", () => viewUSA());
+        viewWorldBtn.on("click", () => viewWorld());
     });
