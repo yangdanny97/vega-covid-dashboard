@@ -145,9 +145,6 @@ var spec = {
                 },
                 "stroke": {
                     "value": "lavender"
-                },
-                "tooltip": {
-                    "signal": "{ 'Country': datum.properties.name, 'Deaths': format(datum.TotalDeaths, ',d'), 'Cases': format(datum.TotalConfirmed, ',d'), 'Recovered': format(datum.TotalRecovered, ',d') }"
                 }
             },
             "update": {
@@ -163,6 +160,42 @@ var spec = {
                     "value": "silver"
                 },
             },
+        }
+    }, {
+        "type": "symbol",
+        "from": {
+            "data": "map"
+        },
+        "encode": {
+            "enter": {},
+            "update": {
+                "size": {
+                    "scale": {
+                        "signal": "Variable"
+                    },
+                    "field": {
+                        "signal": "Variable"
+                    },
+                    "mult": {
+                        "signal": "scaleFactor"
+                    }
+                },
+                "fill": {
+                    "value": "red"
+                },
+                "fillOpacity": {
+                    "value": 0.8
+                },
+                "strokeWidth": {
+                    "value": 0
+                },
+                "x": {
+                    "field": "center[0]"
+                },
+                "y": {
+                    "field": "center[1]"
+                }
+            }
         }
     }]
 };
@@ -280,47 +313,12 @@ function setupWorldMap(countriesdata) {
             "element": "#viewControl"
         },
     });
-    worldspec.marks.push({
-        "type": "symbol",
-        "from": {
-            "data": "map"
-        },
-        "encode": {
-            "enter": {
-                "tooltip": {
-                    "signal": "{ 'Country': datum.properties.name, 'Deaths': format(datum.TotalDeaths, ',d'), 'Cases': format(datum.TotalConfirmed, ',d'), 'Recovered': format(datum.TotalRecovered, ',d') }"
-                }
-            },
-            "update": {
-                "size": {
-                    "scale": {
-                        "signal": "Variable"
-                    },
-                    "field": {
-                        "signal": "Variable"
-                    },
-                    "mult": {
-                        "signal": "scaleFactor"
-                    }
-                },
-                "fill": {
-                    "value": "red"
-                },
-                "fillOpacity": {
-                    "value": 0.8
-                },
-                "strokeWidth": {
-                    "value": 0
-                },
-                "x": {
-                    "field": "center[0]"
-                },
-                "y": {
-                    "field": "center[1]"
-                }
-            }
-        }
-    });
+    worldspec.marks[0].encode.enter.tooltip = {
+        "signal": "{ 'Country': datum.properties.name, 'Deaths': format(datum.TotalDeaths, ',d'), 'Cases': format(datum.TotalConfirmed, ',d'), 'Recovered': format(datum.TotalRecovered, ',d') }"
+    }
+    worldspec.marks[1].encode.enter.tooltip = {
+        "signal": "{ 'Country': datum.properties.name, 'Deaths': format(datum.TotalDeaths, ',d'), 'Cases': format(datum.TotalConfirmed, ',d'), 'Recovered': format(datum.TotalRecovered, ',d') }"
+    }
     renderWorld(worldspec);
 }
 
@@ -415,48 +413,12 @@ function setupUSMap(statesdata) {
             "element": "#view2Control"
         },
     });
-    usaspec.marks.push({
-        "type": "symbol",
-        "from": {
-            "data": "map"
-        },
-        "encode": {
-            "enter": {
-                // don't display recovered data because it's bugged
-                "tooltip": {
-                    "signal": "{ 'State': datum.properties.name, 'Deaths': format(datum.TotalDeaths, ',d'), 'Cases': format(datum.TotalConfirmed, ',d') }"
-                }
-            },
-            "update": {
-                "size": {
-                    "scale": {
-                        "signal": "Variable"
-                    },
-                    "field": {
-                        "signal": "Variable"
-                    },
-                    "mult": {
-                        "signal": "scaleFactor"
-                    }
-                },
-                "fill": {
-                    "value": "red"
-                },
-                "fillOpacity": {
-                    "value": 0.8
-                },
-                "strokeWidth": {
-                    "value": 0
-                },
-                "x": {
-                    "field": "center[0]"
-                },
-                "y": {
-                    "field": "center[1]"
-                }
-            }
-        }
-    });
+    usaspec.marks[0].encode.enter.tooltip = {
+        "signal": "{ 'State': datum.properties.name, 'Deaths': format(datum.TotalDeaths, ',d'), 'Cases': format(datum.TotalConfirmed, ',d')}"
+    }
+    usaspec.marks[1].encode.enter.tooltip = {
+        "signal": "{ 'State': datum.properties.name, 'Deaths': format(datum.TotalDeaths, ',d'), 'Cases': format(datum.TotalConfirmed, ',d')}"
+    }
     renderUSA(usaspec);
 }
 
