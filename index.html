@@ -41,14 +41,14 @@
     }
 
     #global {
-        margin: 20px;
         float: left;
     }
 
     #view,
     #view2 {
-        margin: 20px;
+        margin: 20px 0px 20px 20px;
         border: 1px solid silver;
+        float: left;
     }
 
     .red {
@@ -64,27 +64,29 @@
     }
 
     #controls {
-        margin: 20px;
+        margin: 20px 20px 20px 0px;
+        float: left;
+        border-top: solid silver 1px;
+        border-bottom: solid silver 1px;
+        border-right: solid silver 1px;
+        height: 610px;
     }
 
     button {
         padding: 5px;
+        color: black;
+        background-color: silver;
+        font-size: 16px;
+    }
+
+    button:hover {
         color: silver;
         background-color: dimgray;
     }
 
-    button:hover {
-        color: black;
-        background-color: silver;
-    }
-
     .active {
-        color: black;
-        background-color: silver;
-    }
-
-    h1 {
-        margin: 20px;
+        color: silver;
+        background-color: dimgray;
     }
 
     .vega-bind-name {
@@ -99,32 +101,36 @@
         color: silver;
     }
 
-    #footer {
+    .clear {
         clear: both;
+    }
+
+    .margin {
         margin: 20px;
     }
 </style>
 
 <body>
-    <h1>COVID-19 Dashboard</h1>
+    <h1 class="margin">COVID-19 Dashboard</h1>
     <hr>
+    <div class = "margin">Pan and zoom the world map by dragging and scrolling.</div>
+    <div id="view"></div>
+    <div id="view2"></div>
     <div id="controls">
         <table>
-            <p>Pan and zoom the world map by dragging and scrolling.</p>
             <tr>
                 <th class="th-noborder">
-                    <button id="viewUS">View USA Map</h3>
+                    <button id="viewUS">View USA Map</button>
                 </th>
                 <th class="th-noborder">
-                    <button id="viewWorld">View World Map</h3>
+                    <button id="viewWorld">View World Map</button>
                 </th>
             </tr>
             <div id="viewControl"></div>
             <div id="view2Control"></div>
         </table>
     </div>
-    <div id="view"></div>
-    <div id="view2"></div>
+    <div class="clear"></div>
     <div>
         <div class="bigtable">
             <table id="recovered" class="table"></table>
@@ -136,13 +142,15 @@
             <table id="cases" class="table"></table>
         </div>
         <div>
-            <table id="global" class="table"></table>
+            <table id="global" class="table margin"></table>
         </div>
     </div>
-    <div id="footer">
+    <div class="clear"></div>
+    <div class="margin">
         <hr>
         <div>Built by <a href="https://github.com/yangdanny97">Danny Yang</a> and <a
-                href="https://github.com/milan-zhou">Milan Zhou</a> using D3 and Vega. <a href="https://github.com/yangdanny97/vega-covid-dashboard">View the code on Github</a></div>
+                href="https://github.com/milan-zhou">Milan Zhou</a> using D3 and Vega. <a
+                href="https://github.com/yangdanny97/vega-covid-dashboard">View the code on Github</a></div>
     </div>
     <script src="./vis.js"></script>
 </body>
